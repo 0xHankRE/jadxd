@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="dev.jadxd.CacheKeyTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-02-21T18:43:04" hostname="police" time="0.146">
+  <properties/>
+  <testcase name="put and get java code(Path)" classname="dev.jadxd.CacheKeyTest" time="0.111"/>
+  <testcase name="cacheKey is deterministic()" classname="dev.jadxd.CacheKeyTest" time="0.018"/>
+  <testcase name="cacheKey changes with different settings()" classname="dev.jadxd.CacheKeyTest" time="0.003"/>
+  <testcase name="cacheKey changes with different version()" classname="dev.jadxd.CacheKeyTest" time="0.001"/>
+  <testcase name="put and get smali code(Path)" classname="dev.jadxd.CacheKeyTest" time="0.002"/>
+  <testcase name="hashFile differs for different content(Path)" classname="dev.jadxd.CacheKeyTest" time="0.003"/>
+  <testcase name="cacheKey changes with different hash()" classname="dev.jadxd.CacheKeyTest" time="0.001"/>
+  <testcase name="hashFile produces consistent sha256(Path)" classname="dev.jadxd.CacheKeyTest" time="0.001"/>
+  <testcase name="cache handles nested class names(Path)" classname="dev.jadxd.CacheKeyTest" time="0.001"/>
+  <system-out><![CDATA[10:43:04.936 [Test worker] DEBUG dev.jadxd.core.Cache - cached java: com/example/Foo
+10:43:04.971 [Test worker] DEBUG dev.jadxd.core.Cache - cached smali: com/example/Foo
+10:43:04.979 [Test worker] DEBUG dev.jadxd.core.Cache - cached java: com/example/Outer$Inner
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
