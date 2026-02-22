@@ -516,13 +516,13 @@ Fetch the content of a specific resource file.
 {
   "session_id": "a1b2c3d4-...",
   "name": "AndroidManifest.xml",
-  "data_type": "TEXT",
+  "data_type": "text",
   "text": "<?xml version=\"1.0\" ...?>...",
   "provenance": {...}
 }
 ```
 
-`data_type` is one of: `TEXT`, `DECODED_DATA` (base64), `RES_TABLE`.
+`data_type` is one of: `text`, `binary` (base64), `res_table`, `res_link`, `unknown`.
 
 #### `POST /v1/sessions/{id}/rename`
 Set a rename alias for a type, method, or field. Aliases are session-scoped metadata overlays

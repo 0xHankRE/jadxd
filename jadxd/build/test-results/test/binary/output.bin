@@ -1,4 +1,4 @@
-U10:43:04.936 [Test worker] DEBUG dev.jadxd.core.Cache - cached java: com/example/Foo
-V10:43:04.971 [Test worker] DEBUG dev.jadxd.core.Cache - cached smali: com/example/Foo
+U15:29:05.679 [Test worker] DEBUG dev.jadxd.core.Cache - cached java: com/example/Foo
+V15:29:05.715 [Test worker] DEBUG dev.jadxd.core.Cache - cached smali: com/example/Foo
 
-]10:43:04.979 [Test worker] DEBUG dev.jadxd.core.Cache - cached java: com/example/Outer$Inner
+]15:29:05.723 [Test worker] DEBUG dev.jadxd.core.Cache - cached java: com/example/Outer$Inner

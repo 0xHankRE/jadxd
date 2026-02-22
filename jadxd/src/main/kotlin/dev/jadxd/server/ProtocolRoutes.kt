@@ -72,7 +72,11 @@ fun Application.configureProtocolRoutes(sessionManager: SessionManager) {
             // Load a new target
             post("/targets") {
                 val req = call.receive<ProtocolLoadRequest>()
-                val settings = DecompileSettings()  // use defaults; options could override later
+                val settings = DecompileSettings(
+                    deobfuscation = req.options["deobfuscation"]?.jsonPrimitive?.booleanOrNull ?: false,
+                    inlineMethods = req.options["inline_methods"]?.jsonPrimitive?.booleanOrNull ?: true,
+                    showInconsistentCode = req.options["show_inconsistent_code"]?.jsonPrimitive?.booleanOrNull ?: true,
+                )
                 val session = sessionManager.load(req.path, settings)
                 val backend = session.backend
 

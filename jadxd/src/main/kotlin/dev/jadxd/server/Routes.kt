@@ -39,6 +39,7 @@ fun Application.configureRoutes(sessionManager: SessionManager) {
                 "INVALID_REGEX" -> HttpStatusCode.BadRequest
                 "LOAD_FAILED" -> HttpStatusCode.UnprocessableEntity
                 "RESOURCE_LOAD_FAILED" -> HttpStatusCode.UnprocessableEntity
+                "MANIFEST_LOAD_FAILED" -> HttpStatusCode.UnprocessableEntity
                 else -> HttpStatusCode.InternalServerError
             }
             routeLog.warn("{}: {}", cause.errorCode, cause.message)
@@ -433,6 +434,7 @@ fun Application.configureRoutes(sessionManager: SessionManager) {
                     call.respond(RenameListResponse(
                         sessionId = session.id,
                         renames = session.renameStore.listAll(),
+                        provenance = session.backend.provenance(),
                     ))
                 }
 

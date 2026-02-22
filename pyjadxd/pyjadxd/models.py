@@ -272,6 +272,8 @@ class RenameResult(BaseModel):
 class RenameListResult(BaseModel):
     session_id: str
     renames: list[RenameEntry]
+    provenance: Provenance
+    warnings: list[str] = Field(default_factory=list)
 
 
 # ── Error report ─────────────────────────────────────────────────────────────
@@ -282,6 +284,7 @@ class ErrorReportResult(BaseModel):
     errors_count: int
     warnings_count: int
     provenance: Provenance
+    warnings: list[str] = Field(default_factory=list)
 
 
 # ── Annotations ─────────────────────────────────────────────────────────────

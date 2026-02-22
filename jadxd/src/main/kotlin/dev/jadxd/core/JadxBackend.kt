@@ -243,14 +243,14 @@ class JadxBackend(
         val classNode = cls.classNode
         val genericParams = try {
             classNode.genericTypeParameters?.map { it.toString() } ?: emptyList()
-        } catch (_: Exception) { emptyList() }
+        } catch (e: Exception) { log.debug("generic params failed for {}: {}", typeId, e.message); emptyList() }
         val genericSuper = try {
             val st = classNode.superClass
             if (st != null && st.isGeneric) st.toString() else null
-        } catch (_: Exception) { null }
+        } catch (e: Exception) { log.debug("generic super failed for {}: {}", typeId, e.message); null }
         val genericIfaces = try {
             classNode.interfaces.filter { it.isGeneric }.map { it.toString() }
-        } catch (_: Exception) { emptyList() }
+        } catch (e: Exception) { log.debug("generic ifaces failed for {}: {}", typeId, e.message); emptyList() }
         ClassHierarchyInfo(
             superClass = classNode.superClass?.toString(),
             interfaces = classNode.interfaces.map { it.toString() },
@@ -270,14 +270,14 @@ class JadxBackend(
                     val obj = argType.`object`
                     if (obj != null) "L${obj.replace('.', '/')};" else argType.toString()
                 }
-            } catch (_: Exception) { emptyList() }
+            } catch (e: Exception) { log.debug("throws extraction failed for {}: {}", m.name, e.message); emptyList() }
             val genericArgs = try {
                 m.methodNode.argTypes?.map { it.toString() } ?: m.arguments.map { it.toString() }
-            } catch (_: Exception) { m.arguments.map { it.toString() } }
+            } catch (e: Exception) { log.debug("generic args failed for {}: {}", m.name, e.message); m.arguments.map { it.toString() } }
             val genericRet = try {
                 val rt = m.methodNode.returnType
                 if (rt != null && rt.isGeneric) rt.toString() else null
-            } catch (_: Exception) { null }
+            } catch (e: Exception) { log.debug("generic return failed for {}: {}", m.name, e.message); null }
             MethodDetail(
                 id = methodDescriptor(m),
                 name = m.name,
@@ -385,7 +385,7 @@ class JadxBackend(
                 )
                 ResContainer.DataType.RES_TABLE -> {
                     // Return root text + note about sub-files
-                    val rootText = try { container.text?.codeStr } catch (_: Exception) { null }
+                    val rootText = try { container.text?.codeStr } catch (e: Exception) { log.warn("res_table text extraction failed: {}", e.message); null }
                     val subNames = container.subFiles.map { it.name }
                     if (subNames.isNotEmpty()) {
                         warnings.add("resource table has ${subNames.size} sub-files: ${subNames.take(5)}")
@@ -459,7 +459,7 @@ class JadxBackend(
             warnings.add("dependency analysis failed: ${e.message}")
             emptyList()
         }
-        val total = try { cls.totalDepsCount } catch (_: Exception) { deps.size }
+        val total = try { cls.totalDepsCount } catch (e: Exception) { log.debug("totalDepsCount failed: {}", e.message); deps.size }
         Triple(deps, total, warnings)
     }
 

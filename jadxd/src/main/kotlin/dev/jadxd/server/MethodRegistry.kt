@@ -533,6 +533,7 @@ fun dispatchQuery(session: Session, method: String, args: JsonObject): ResultEnv
                 val data = RenameListResponse(
                     sessionId = session.id,
                     renames = session.renameStore.listAll(),
+                    provenance = backend.provenance(),
                 )
                 envelope(method, args, json.encodeToJsonElement(RenameListResponse.serializer(), data))
             }

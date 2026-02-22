@@ -52,15 +52,17 @@ class SessionManager(private val cacheDir: Path) {
     }
 
     fun close(sessionId: String) {
-        sessions.remove(sessionId)?.let { session ->
-            session.renameStore.close()
-            session.backend.close()
-            log.info("session {} closed", sessionId)
-        }
+        val session = sessions.remove(sessionId)
+            ?: throw SessionNotFoundException(sessionId)
+        session.renameStore.close()
+        session.backend.close()
+        log.info("session {} closed", sessionId)
     }
 
     fun closeAll() {
-        sessions.keys.toList().forEach { close(it) }
+        sessions.keys.toList().forEach { id ->
+            try { close(id) } catch (_: SessionNotFoundException) { /* already closed */ }
+        }
     }
 
     fun activeSessions(): Int = sessions.size

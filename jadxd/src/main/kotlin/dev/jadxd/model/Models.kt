@@ -366,6 +366,8 @@ data class RenameResponse(
 data class RenameListResponse(
     @SerialName("session_id") val sessionId: String,
     val renames: List<RenameEntry>,
+    val provenance: Provenance,
+    val warnings: List<String> = emptyList(),
 )
 
 // ── Error report ────────────────────────────────────────────────────────────
@@ -376,6 +378,7 @@ data class ErrorReportResponse(
     @SerialName("errors_count") val errorsCount: Int,
     @SerialName("warnings_count") val warningsCount: Int,
     val provenance: Provenance,
+    val warnings: List<String> = emptyList(),
 )
 
 // ── Annotations ────────────────────────────────────────────────────────────

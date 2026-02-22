@@ -24,6 +24,7 @@ TOTAL=0
 # Test samples bundled with jadx
 SAMPLE_APK="$SCRIPT_DIR/jadx/jadx-cli/src/test/resources/samples/small.apk"
 SAMPLE_DEX="$SCRIPT_DIR/jadx/jadx-cli/src/test/resources/samples/hello.dex"
+SAMPLE_JAR="$SCRIPT_DIR/test-fixtures/testapp.jar"
 
 # ── Auto-detect JDK 17+ ───────────────────────────────────────────────
 # The Foojay toolchain plugin itself requires JDK 17+ to load.  If the
@@ -651,8 +652,240 @@ assert_contains "query deleted target: ok=false" "\"ok\": false"
 assert_contains "query deleted target: SESSION_NOT_FOUND" "SESSION_NOT_FOUND"
 
 # ══════════════════════════════════════════════════════════════════════
+# ── Precise output tests (compiled test fixture) ──────────────────────
+# ══════════════════════════════════════════════════════════════════════
+#
+# testapp.jar contains 4 classes with known relationships:
+#   com.test.Callable  (interface)
+#   com.test.Base      (class, @Deprecated, 2 fields: counter, name)
+#   com.test.Child     (extends Base, implements Callable, field TAG)
+#   com.test.Helper    (utility, compute() throws ArithmeticException)
+#
+# Known cross-references:
+#   Child.process() -> Child.call(int), Helper.log(String,String)
+#   Child.call(int) -> Base.getName(), overrides Callable.call(int)
+#   Helper.compute() throws ArithmeticException
+#   String "child" in Child.<init>, "Child" in Child.TAG, "ERROR" in Helper.compute
+#
 
-# ── 49. Health check shows 0 sessions after cleanup ──────────────────
+log ""
+log "Precise output tests (test-fixtures/testapp.jar)"
+echo ""
+
+# ── 49. Load fixture JAR ─────────────────────────────────────────────
+
+log "Load fixture JAR"
+http_post "/backends/jadx/targets" "{\"path\": \"$SAMPLE_JAR\"}"
+assert_status "POST /backends/jadx/targets (JAR)" "201"
+
+FIX_TID=$(json_field "target_id")
+echo "  Fixture target: $FIX_TID"
+
+if [[ -z "$FIX_TID" ]]; then
+    echo "FATAL: could not extract target_id for fixture JAR"
+    exit 1
+fi
+
+# Helper: query the fixture target
+fix_query() {
+    local method="$1" args="$2"
+    http_post "/backends/jadx/query" "{\"target_id\": \"$FIX_TID\", \"method\": \"$method\", \"args\": $args}"
+}
+
+# ── 50. Verify exact types ───────────────────────────────────────────
+
+log "Fixture: list_types (expect 4 known types)"
+fix_query "list_types" "{}"
+assert_status "fix list_types" "200"
+assert_contains "fix types: has Callable" "Lcom.test.Callable;"
+assert_contains "fix types: has Base" "Lcom.test.Base;"
+assert_contains "fix types: has Child" "Lcom.test.Child;"
+assert_contains "fix types: has Helper" "Lcom.test.Helper;"
+
+# ── 51. Class hierarchy: Child extends Base implements Callable ──────
+
+log "Fixture: Child hierarchy"
+fix_query "get_hierarchy" "{\"type_id\": \"Lcom.test.Child;\"}"
+assert_status "fix Child hierarchy" "200"
+assert_contains "fix hierarchy: super=Base" "com.test.Base"
+assert_contains "fix hierarchy: implements Callable" "com.test.Callable"
+
+# ── 52. Class hierarchy: Base extends Object ─────────────────────────
+
+log "Fixture: Base hierarchy"
+fix_query "get_hierarchy" "{\"type_id\": \"Lcom.test.Base;\"}"
+assert_status "fix Base hierarchy" "200"
+assert_contains "fix hierarchy: super=Object" "java.lang.Object"
+
+# ── 53. Callable is interface ────────────────────────────────────────
+
+log "Fixture: Callable kind"
+fix_query "list_types" "{}"
+assert_status "fix types for kind" "200"
+assert_contains "fix types: Callable is interface" "\"interface\""
+
+# ── 54. Fields: Base has counter and name ────────────────────────────
+
+log "Fixture: Base fields"
+fix_query "list_fields" "{\"type_id\": \"Lcom.test.Base;\"}"
+assert_status "fix Base fields" "200"
+assert_contains "fix fields: has counter" "counter"
+assert_contains "fix fields: has name" "name"
+
+# ── 55. Fields: Child has TAG ────────────────────────────────────────
+
+log "Fixture: Child fields"
+fix_query "list_fields" "{\"type_id\": \"Lcom.test.Child;\"}"
+assert_status "fix Child fields" "200"
+assert_contains "fix fields: has TAG" "TAG"
+
+# ── 56. Methods: Child has call, process, <init> ─────────────────────
+
+log "Fixture: Child methods"
+fix_query "list_methods" "{\"type_id\": \"Lcom.test.Child;\"}"
+assert_status "fix Child methods" "200"
+assert_contains "fix methods: has call" "call"
+assert_contains "fix methods: has process" "process"
+
+# ── 57. Methods detail: Helper.compute throws ArithmeticException ────
+
+log "Fixture: Helper methods detail (throws)"
+fix_query "list_methods_detail" "{\"type_id\": \"Lcom.test.Helper;\"}"
+assert_status "fix Helper methods detail" "200"
+assert_contains "fix methods: has compute" "compute"
+assert_contains "fix methods: throws ArithmeticException" "ArithmeticException"
+
+# ── 58. Decompile class: Child ───────────────────────────────────────
+
+log "Fixture: decompile Child class"
+fix_query "decompile_class" "{\"type_id\": \"Lcom.test.Child;\"}"
+assert_status "fix decompile Child" "200"
+assert_contains "fix decompile: extends Base" "extends Base"
+assert_contains "fix decompile: implements Callable" "implements Callable"
+assert_contains "fix decompile: has process method" "process"
+assert_contains "fix decompile: has call method" "call"
+
+# ── 59. Xrefs from: Child.process calls Child.call and Helper.log ───
+
+log "Fixture: xrefs_from Child.process()"
+fix_query "xrefs_from" "{\"method_id\": \"Lcom.test.Child;->process()V\"}"
+assert_status "fix xrefs_from process" "200"
+assert_contains "fix xrefs_from: calls call()" "call"
+assert_contains "fix xrefs_from: calls Helper.log" "log"
+assert_contains "fix xrefs_from: kind is method" "\"kind\": \"method\""
+
+# ── 60. Xrefs to: Helper.log called by Child.process ────────────────
+
+log "Fixture: xrefs_to Helper.log()"
+fix_query "xrefs_to" "{\"method_id\": \"Lcom.test.Helper;->log(Ljava/lang/String;Ljava/lang/String;)V\"}"
+assert_status "fix xrefs_to Helper.log" "200"
+assert_contains "fix xrefs_to: caller is process" "process"
+assert_contains "fix xrefs_to: kind is method" "\"kind\": \"method\""
+
+# ── 61. Xrefs to: Child.call called by Child.process ────────────────
+
+log "Fixture: xrefs_to Child.call()"
+fix_query "xrefs_to" "{\"method_id\": \"Lcom.test.Child;->call(I)Ljava/lang/String;\"}"
+assert_status "fix xrefs_to Child.call" "200"
+assert_contains "fix xrefs_to: caller is process" "process"
+
+# ── 62. Class xrefs: who references Helper? ──────────────────────────
+
+log "Fixture: class_xrefs Helper"
+fix_query "class_xrefs" "{\"type_id\": \"Lcom.test.Helper;\"}"
+assert_status "fix class_xrefs Helper" "200"
+assert_contains "fix class_xrefs: Child references Helper" "Child"
+assert_contains "fix class_xrefs: refs have kind" "\"kind\""
+
+# ── 63. Field xrefs: who uses Base.counter? ──────────────────────────
+
+log "Fixture: field_xrefs Base.counter"
+fix_query "field_xrefs" "{\"field_id\": \"Lcom.test.Base;->counter:I\"}"
+assert_status "fix field_xrefs counter" "200"
+# Child.call() increments counter, so there should be a ref
+assert_contains "fix field_xrefs: has refs" "\"refs\""
+assert_contains "fix field_xrefs: kind is method" "\"kind\": \"method\""
+
+# ── 64. Annotations: Base has @Deprecated ────────────────────────────
+
+log "Fixture: Base annotations"
+fix_query "get_annotations" "{\"type_id\": \"Lcom.test.Base;\"}"
+assert_status "fix Base annotations" "200"
+assert_contains "fix annotations: has Deprecated" "Deprecated"
+
+# ── 65. String search: find 'child' ─────────────────────────────────
+
+log "Fixture: search for 'child'"
+fix_query "search_strings" "{\"query\": \"child\", \"regex\": false, \"limit\": 10}"
+assert_status "fix string search child" "200"
+assert_contains "fix strings: found 'child'" "child"
+assert_contains "fix strings: in Child class" "Lcom.test.Child;"
+
+# ── 66. String search: find 'ERROR' ─────────────────────────────────
+
+log "Fixture: search for 'ERROR'"
+fix_query "search_strings" "{\"query\": \"ERROR\", \"regex\": false, \"limit\": 10}"
+assert_status "fix string search ERROR" "200"
+assert_contains "fix strings: found ERROR" "ERROR"
+assert_contains "fix strings: in Helper class" "Lcom.test.Helper;"
+
+# ── 67. Dependencies: Child depends on Base, Callable, Helper ────────
+
+log "Fixture: Child dependencies"
+fix_query "get_dependencies" "{\"type_id\": \"Lcom.test.Child;\"}"
+assert_status "fix Child dependencies" "200"
+assert_contains "fix deps: depends on Base" "Lcom.test.Base;"
+assert_contains "fix deps: depends on Callable" "Lcom.test.Callable;"
+assert_contains "fix deps: depends on Helper" "Lcom.test.Helper;"
+
+# ── 68. Packages: com.test ───────────────────────────────────────────
+
+log "Fixture: packages"
+fix_query "list_packages" "{}"
+assert_status "fix packages" "200"
+assert_contains "fix packages: has com.test" "com.test"
+
+# ── 69. Decompile method: Child.call ─────────────────────────────────
+
+log "Fixture: decompile Child.call()"
+fix_query "decompile_method" "{\"method_id\": \"Lcom.test.Child;->call(I)Ljava/lang/String;\"}"
+assert_status "fix decompile Child.call" "200"
+assert_contains "fix decompile call: has getName" "getName"
+assert_contains "fix decompile call: has counter" "counter"
+
+# ── 70. Rename via protocol + verify in decompiled source ────────────
+
+log "Fixture: rename Base via protocol"
+fix_query "rename" "{\"id\": \"Lcom.test.Base;\", \"alias\": \"BaseEntity\"}"
+assert_status "fix rename Base" "200"
+assert_contains "fix rename: alias=BaseEntity" "BaseEntity"
+
+log "Fixture: list renames"
+fix_query "list_renames" "{}"
+assert_status "fix list renames" "200"
+assert_contains "fix renames: has BaseEntity" "BaseEntity"
+
+log "Fixture: remove rename"
+fix_query "remove_rename" "{\"id\": \"Lcom.test.Base;\"}"
+assert_status "fix remove rename" "200"
+assert_contains "fix remove rename: status removed" "removed"
+
+# ── 71. Error report ─────────────────────────────────────────────────
+
+log "Fixture: error report"
+fix_query "error_report" "{}"
+assert_status "fix error report" "200"
+assert_contains "fix error report: has errors_count" "errors_count"
+
+# ── 72. Clean up fixture target ──────────────────────────────────────
+
+log "Fixture: delete target"
+http_delete "/backends/jadx/targets/$FIX_TID"
+assert_status "fix DELETE target" "200"
+
+# ══════════════════════════════════════════════════════════════════════
+
+# ── 73. Health check shows 0 sessions after cleanup ──────────────────
 
 log "Health check (post-cleanup)"
 http_get "/v1/health"

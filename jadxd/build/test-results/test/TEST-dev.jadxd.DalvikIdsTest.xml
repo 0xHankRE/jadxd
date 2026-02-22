@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="dev.jadxd.DalvikIdsTest" tests="16" skipped="0" failures="0" errors="0" timestamp="2026-02-21T18:43:04" hostname="police" time="0.018">
+<testsuite name="dev.jadxd.DalvikIdsTest" tests="16" skipped="0" failures="0" errors="0" timestamp="2026-02-21T23:29:05" hostname="police" time="0.022">
   <properties/>
-  <testcase name="extractMethodSmali finds correct method()" classname="dev.jadxd.DalvikIdsTest" time="0.008"/>
-  <testcase name="parse inner class type descriptor()" classname="dev.jadxd.DalvikIdsTest" time="0.0"/>
+  <testcase name="extractMethodSmali finds correct method()" classname="dev.jadxd.DalvikIdsTest" time="0.01"/>
+  <testcase name="parse inner class type descriptor()" classname="dev.jadxd.DalvikIdsTest" time="0.001"/>
   <testcase name="reject type descriptor without L prefix()" classname="dev.jadxd.DalvikIdsTest" time="0.001"/>
   <testcase name="dottedNameToDescriptor()" classname="dev.jadxd.DalvikIdsTest" time="0.0"/>
-  <testcase name="parse field descriptor()" classname="dev.jadxd.DalvikIdsTest" time="0.0"/>
+  <testcase name="parse field descriptor()" classname="dev.jadxd.DalvikIdsTest" time="0.001"/>
   <testcase name="parse simple method descriptor()" classname="dev.jadxd.DalvikIdsTest" time="0.0"/>
-  <testcase name="parse constructor descriptor()" classname="dev.jadxd.DalvikIdsTest" time="0.001"/>
-  <testcase name="parse class init descriptor()" classname="dev.jadxd.DalvikIdsTest" time="0.0"/>
-  <testcase name="parse valid type descriptor()" classname="dev.jadxd.DalvikIdsTest" time="0.001"/>
-  <testcase name="reject type descriptor without semicolon()" classname="dev.jadxd.DalvikIdsTest" time="0.0"/>
+  <testcase name="parse constructor descriptor()" classname="dev.jadxd.DalvikIdsTest" time="0.0"/>
+  <testcase name="parse class init descriptor()" classname="dev.jadxd.DalvikIdsTest" time="0.001"/>
+  <testcase name="parse valid type descriptor()" classname="dev.jadxd.DalvikIdsTest" time="0.0"/>
+  <testcase name="reject type descriptor without semicolon()" classname="dev.jadxd.DalvikIdsTest" time="0.001"/>
   <testcase name="rawNameToDescriptor round trip()" classname="dev.jadxd.DalvikIdsTest" time="0.001"/>
   <testcase name="reject method descriptor without arrow()" classname="dev.jadxd.DalvikIdsTest" time="0.0"/>
   <testcase name="descriptorToDottedName()" classname="dev.jadxd.DalvikIdsTest" time="0.0"/>
   <testcase name="parse field with object type()" classname="dev.jadxd.DalvikIdsTest" time="0.0"/>
   <testcase name="parse method with object args()" classname="dev.jadxd.DalvikIdsTest" time="0.0"/>
-  <testcase name="extractMethodSmali returns null for missing method()" classname="dev.jadxd.DalvikIdsTest" time="0.0"/>
+  <testcase name="extractMethodSmali returns null for missing method()" classname="dev.jadxd.DalvikIdsTest" time="0.001"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>
